@@ -4,9 +4,12 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
+    initMobileMenu();
     initScrollSpy();
     initScrollAnimations();
     initCarousel();
+    initUniversoSwiper();
+    initPersonajesSwiper();
     initCountdown();
     initPreventaForm();
     initContactForm();
@@ -39,6 +42,49 @@ function initNavigation() {
                 });
             }
         });
+    });
+}
+
+/**
+ * Mobile menu toggle
+ */
+function initMobileMenu() {
+    const toggle = document.querySelector('.nav-toggle');
+    const menu = document.querySelector('.mobile-menu');
+    const closeBtn = document.querySelector('.mobile-close');
+    const links = menu ? menu.querySelectorAll('a') : [];
+
+    if (!toggle || !menu) return;
+
+    function closeMenu() {
+        menu.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        menu.setAttribute('aria-hidden', 'true');
+    }
+
+    function openMenu() {
+        menu.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true');
+        menu.setAttribute('aria-hidden', 'false');
+    }
+
+    toggle.addEventListener('click', () => {
+        const isOpen = menu.classList.contains('open');
+        if (isOpen) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeMenu);
+    }
+
+    links.forEach(link => link.addEventListener('click', closeMenu));
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeMenu();
     });
 }
 
@@ -186,11 +232,42 @@ function initCarousel() {
 }
 
 /**
+ * Swiper for Universo section
+ */
+function initUniversoSwiper() {
+    const swiperEl = document.querySelector('.universo-swiper');
+    if (!swiperEl || typeof Swiper === 'undefined') return;
+
+    new Swiper(swiperEl, {
+        initialSlide: 1,
+        slidesPerView: 1,
+        spaceBetween: 16,
+        centeredSlides: true,
+        loop: true,
+        speed: 0,
+        rewind: true,
+        pagination: {
+            el: '.universo-swiper .swiper-pagination',
+            clickable: true,
+        },
+        navigation: {
+            nextEl: '.universo-swiper .swiper-button-next',
+            prevEl: '.universo-swiper .swiper-button-prev',
+        },
+        breakpoints: {
+            1024: {
+                slidesPerView: 1,
+                spaceBetween: 22,
+            }
+        }
+    });
+}
+
+/**
  * Countdown for Preventa section
  */
 function initCountdown() {
-    const target = new Date();
-    target.setDate(target.getDate() + 15); // default: 15 days from now
+    const target = new Date('2025-12-13T00:00:00.000Z');
 
     const daysEl = document.getElementById('count-days');
     const hoursEl = document.getElementById('count-hours');
@@ -229,6 +306,8 @@ function initPreventaForm() {
     const qtyBtns = document.querySelectorAll('.qty-btn');
     const qtyInput = document.querySelector('#cantidad');
     const preventaForm = document.querySelector('.preventa-form');
+    const submitBtn = preventaForm?.querySelector('button[type="submit"]');
+    const requiredFields = preventaForm ? Array.from(preventaForm.querySelectorAll('input')) : [];
 
     if (qtyBtns && qtyInput) {
         qtyBtns.forEach(btn => {
@@ -237,19 +316,79 @@ function initPreventaForm() {
                 const current = Number(qtyInput.value) || 1;
                 const next = Math.min(10, Math.max(1, current + change));
                 qtyInput.value = next;
+                validate();
             });
         });
     }
 
     if (preventaForm) {
         preventaForm.addEventListener('submit', (e) => {
+            validate();
+            if (submitBtn?.disabled) {
+                e.preventDefault();
+                return;
+            }
             e.preventDefault();
             const data = Object.fromEntries(new FormData(preventaForm));
             console.log('Preventa form:', data);
             alert('¡Gracias! Te contactaremos con tus entradas.');
             preventaForm.reset();
+            validate();
         });
+
+        // Live validation
+        requiredFields.forEach(input => {
+            input.addEventListener('input', validate);
+            input.addEventListener('change', validate);
+        });
+        validate();
     }
+
+  
+    function validate() {
+        if (!preventaForm || !submitBtn) return;
+        const nombre = preventaForm.querySelector('#nombre')?.value.trim();
+        const apellido = preventaForm.querySelector('#apellido')?.value.trim();
+        const email = preventaForm.querySelector('#email')?.value.trim();
+        const fecha = preventaForm.querySelector('#fecha')?.value;
+        const cantidadVal = Number(qtyInput?.value || 0);
+
+        const allFilled = nombre && apellido && email && fecha && cantidadVal >= 1;
+        console.log(allFilled);
+        submitBtn.disabled = !(allFilled);
+    }
+}
+
+/**
+ * Swiper for Personajes section
+ */
+function initPersonajesSwiper() {
+    const swiperEl = document.querySelector('.personajes-swiper');
+    if (!swiperEl || typeof Swiper === 'undefined') return;
+
+    new Swiper(swiperEl, {
+        initialSlide: 1,
+        slidesPerView: 1,
+        spaceBetween: 16,
+        centeredSlides: true,
+        loop: true,
+        speed: 0,
+        rewind: true,
+        pagination: {
+            el: '.personajes-swiper .swiper-pagination',
+            clickable: true,
+        },
+        navigation: {
+            nextEl: '.personajes-swiper .swiper-button-next',
+            prevEl: '.personajes-swiper .swiper-button-prev',
+        },
+        breakpoints: {
+            1024: {
+                slidesPerView: 1,
+                spaceBetween: 22,
+            }
+        }
+    });
 }
 
 /**
